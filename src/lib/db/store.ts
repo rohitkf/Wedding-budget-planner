@@ -42,6 +42,14 @@ function hasBlobToken(): boolean {
   return !!process.env.BLOB_READ_WRITE_TOKEN;
 }
 
+function assertNotVercel(): void {
+  if (process.env.VERCEL) {
+    throw new Error(
+      "BLOB_READ_WRITE_TOKEN is not set. Connect a Vercel Blob store to this project in the Vercel dashboard under Storage, then redeploy."
+    );
+  }
+}
+
 async function readLocalStore(): Promise<Store> {
   try {
     const raw = fs.readFileSync(LOCAL_STORE_PATH, "utf-8");
@@ -83,10 +91,12 @@ async function writeBlobStore(store: Store): Promise<void> {
 
 /** Reads the whole app-data document. Single JSON blob keeps this within Vercel's free Hobby tier (a few KB vs. the 1GB included). */
 export async function readStore(): Promise<Store> {
+  if (!hasBlobToken()) assertNotVercel();
   return hasBlobToken() ? readBlobStore() : readLocalStore();
 }
 
 export async function writeStore(store: Store): Promise<void> {
+  if (!hasBlobToken()) assertNotVercel();
   return hasBlobToken() ? writeBlobStore(store) : writeLocalStore(store);
 }
 
