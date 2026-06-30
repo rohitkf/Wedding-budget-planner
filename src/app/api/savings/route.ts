@@ -5,7 +5,7 @@ import { parseBody, handleApiError } from "@/lib/api-helpers";
 
 export async function GET() {
   try {
-    return NextResponse.json(listSavingsAccounts());
+    return NextResponse.json(await listSavingsAccounts());
   } catch (err) {
     return handleApiError(err);
   }
@@ -14,7 +14,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const input = await parseBody(req, savingsAccountInputSchema);
-    const account = createSavingsAccount(input);
+    const account = await createSavingsAccount(input);
     return NextResponse.json(account, { status: 201 });
   } catch (err) {
     return handleApiError(err);

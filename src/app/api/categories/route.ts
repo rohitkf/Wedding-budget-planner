@@ -6,7 +6,7 @@ import { getComputedData } from "@/lib/aggregate";
 
 export async function GET() {
   try {
-    const { categories } = getComputedData();
+    const { categories } = await getComputedData();
     return NextResponse.json(categories);
   } catch (err) {
     return handleApiError(err);
@@ -16,7 +16,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const input = await parseBody(req, categoryInputSchema);
-    const category = createCategory(input);
+    const category = await createCategory(input);
     return NextResponse.json(category, { status: 201 });
   } catch (err) {
     return handleApiError(err);

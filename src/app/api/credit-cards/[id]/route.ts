@@ -7,7 +7,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   try {
     const { id } = await params;
     const input = await parseBody(req, creditCardInputSchema.partial());
-    const card = updateCreditCard(id, input);
+    const card = await updateCreditCard(id, input);
     if (!card) return jsonError("Credit card not found", 404);
     return NextResponse.json(card);
   } catch (err) {
@@ -18,9 +18,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    if (!getCreditCard(id)) return jsonError("Credit card not found", 404);
+    if (!(await getCreditCard(id))) return jsonError("Credit card not found", 404);
     try {
-      deleteCreditCard(id);
+      await deleteCreditCard(id);
     } catch {
       return jsonError("Cannot delete a card that has recorded payments against it", 409);
     }
