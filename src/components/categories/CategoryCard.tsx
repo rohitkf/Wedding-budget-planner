@@ -91,10 +91,9 @@ export function CategoryCard({
         open={deleteOpen}
         title="Delete Category"
         description={`Are you sure you want to delete "${category.name}"? This will also delete all of its subcategories and payment history.`}
-        loading={deleteCategory.isPending}
-        onConfirm={async () => {
-          await deleteCategory.mutateAsync(category.id);
+        onConfirm={() => {
           setDeleteOpen(false);
+          deleteCategory.mutate(category.id);
         }}
         onCancel={() => setDeleteOpen(false)}
       />
