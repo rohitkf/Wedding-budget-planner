@@ -1,83 +1,73 @@
-import { getDb } from "./client";
+import { readStore, withStore } from "./store";
 import { newId, nowIso } from "./ids";
 import type { CreditCard } from "@/lib/types";
 
-interface Row {
-  id: string;
-  name: string;
-  credit_limit: number;
-  available_credit: number;
-  created_at: string;
-  updated_at: string;
+function sortByCreatedAt(cards: CreditCard[]): CreditCard[] {
+  return [...cards].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
-function mapRow(row: Row): CreditCard {
-  return {
-    id: row.id,
-    name: row.name,
-    creditLimit: row.credit_limit,
-    availableCredit: row.available_credit,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
+export async function listCreditCards(): Promise<CreditCard[]> {
+  const { creditCards } = await readStore();
+  return sortByCreatedAt(creditCards);
 }
 
-export function listCreditCards(): CreditCard[] {
-  const db = getDb();
-  const rows = db
-    .prepare("SELECT * FROM credit_cards ORDER BY created_at ASC")
-    .all() as unknown as Row[];
-  return rows.map(mapRow);
+export async function getCreditCard(id: string): Promise<CreditCard | null> {
+  const { creditCards } = await readStore();
+  return creditCards.find((c) => c.id === id) ?? null;
 }
 
-export function getCreditCard(id: string): CreditCard | null {
-  const db = getDb();
-  const row = db.prepare("SELECT * FROM credit_cards WHERE id = ?").get(id) as Row | undefined;
-  return row ? mapRow(row) : null;
-}
-
-export function createCreditCard(input: {
+export async function createCreditCard(input: {
   name: string;
   creditLimit: number;
   availableCredit: number;
-}): CreditCard {
-  const db = getDb();
-  const id = newId();
-  const now = nowIso();
-  db.prepare(
-    `INSERT INTO credit_cards (id, name, credit_limit, available_credit, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(id, input.name, input.creditLimit, input.availableCredit, now, now);
-  return getCreditCard(id)!;
+}): Promise<CreditCard> {
+  return withStore((store) => {
+    const now = nowIso();
+    const card: CreditCard = {
+      id: newId(),
+      name: input.name,
+      creditLimit: input.creditLimit,
+      availableCredit: input.availableCredit,
+      createdAt: now,
+      updatedAt: now,
+    };
+    store.creditCards.push(card);
+    return card;
+  });
 }
 
-export function updateCreditCard(
+export async function updateCreditCard(
   id: string,
   input: { name?: string; creditLimit?: number; availableCredit?: number }
-): CreditCard | null {
-  const existing = getCreditCard(id);
-  if (!existing) return null;
-  const db = getDb();
-  const now = nowIso();
-  db.prepare(
-    `UPDATE credit_cards SET name = ?, credit_limit = ?, available_credit = ?, updated_at = ? WHERE id = ?`
-  ).run(
-    input.name ?? existing.name,
-    input.creditLimit ?? existing.creditLimit,
-    input.availableCredit ?? existing.availableCredit,
-    now,
-    id
-  );
-  return getCreditCard(id);
+): Promise<CreditCard | null> {
+  return withStore((store) => {
+    const existing = store.creditCards.find((c) => c.id === id);
+    if (!existing) return null;
+    if (input.name !== undefined) existing.name = input.name;
+    if (input.creditLimit !== undefined) existing.creditLimit = input.creditLimit;
+    if (input.availableCredit !== undefined) existing.availableCredit = input.availableCredit;
+    existing.updatedAt = nowIso();
+    return existing;
+  });
 }
 
-export function adjustAvailableCredit(id: string, delta: number): CreditCard | null {
-  const existing = getCreditCard(id);
-  if (!existing) return null;
-  return updateCreditCard(id, { availableCredit: existing.availableCredit + delta });
+export async function adjustAvailableCredit(id: string, delta: number): Promise<CreditCard | null> {
+  return withStore((store) => {
+    const existing = store.creditCards.find((c) => c.id === id);
+    if (!existing) return null;
+    existing.availableCredit += delta;
+    existing.updatedAt = nowIso();
+    return existing;
+  });
 }
 
-export function deleteCreditCard(id: string): boolean {
-  const db = getDb();
-  const result = db.prepare("DELETE FROM credit_cards WHERE id = ?").run(id);
-  return result.changes > 0;
+export async function deleteCreditCard(id: string): Promise<boolean> {
+  return withStore((store) => {
+    const inUse = store.payments.some((p) => p.creditCardId === id);
+    if (inUse) throw new Error("Cannot delete a card that has recorded payments against it");
+    const index = store.creditCards.findIndex((c) => c.id === id);
+    if (index === -1) return false;
+    store.creditCards.splice(index, 1);
+    return true;
+  });
 }

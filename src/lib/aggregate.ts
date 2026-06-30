@@ -8,22 +8,22 @@ import { computeSubcategory, computeCategoryTotals, computeDashboardSummary } fr
 import type { CategoryWithTotals, Payment, SubcategoryComputed } from "./types";
 
 export interface ComputedData {
-  weddingInfo: ReturnType<typeof getWeddingInfo>;
+  weddingInfo: Awaited<ReturnType<typeof getWeddingInfo>>;
   categories: CategoryWithTotals[];
   subcategories: SubcategoryComputed[];
   payments: Payment[];
-  savings: ReturnType<typeof listSavingsAccounts>;
-  creditCards: ReturnType<typeof listCreditCards>;
+  savings: Awaited<ReturnType<typeof listSavingsAccounts>>;
+  creditCards: Awaited<ReturnType<typeof listCreditCards>>;
 }
 
 /** Single place that assembles raw rows + the calculation engine into the data every page needs. */
-export function getComputedData(): ComputedData {
-  const weddingInfo = getWeddingInfo();
-  const categories = listCategories();
-  const allSubcategories = listSubcategories();
-  const allPayments = listPayments();
-  const savings = listSavingsAccounts();
-  const creditCards = listCreditCards();
+export async function getComputedData(): Promise<ComputedData> {
+  const weddingInfo = await getWeddingInfo();
+  const categories = await listCategories();
+  const allSubcategories = await listSubcategories();
+  const allPayments = await listPayments();
+  const savings = await listSavingsAccounts();
+  const creditCards = await listCreditCards();
 
   const paymentsBySubcategory = new Map<string, Payment[]>();
   for (const p of allPayments) {
@@ -57,8 +57,8 @@ export function getComputedData(): ComputedData {
   };
 }
 
-export function getDashboardSummary() {
-  const data = getComputedData();
+export async function getDashboardSummary() {
+  const data = await getComputedData();
   const summary = computeDashboardSummary(data.subcategories, data.savings, data.creditCards);
   return { ...data, summary };
 }

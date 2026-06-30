@@ -28,7 +28,7 @@ const HEADERS = [
 
 export async function GET() {
   try {
-    const { categories } = getComputedData();
+    const { categories } = await getComputedData();
     const categoryNameById = new Map(categories.map((c) => [c.id, c.name]));
     const rows: string[] = [HEADERS.map(csvCell).join(",")];
 

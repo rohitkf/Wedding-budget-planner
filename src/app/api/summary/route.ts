@@ -4,7 +4,7 @@ import { handleApiError } from "@/lib/api-helpers";
 
 export async function GET() {
   try {
-    return NextResponse.json(getDashboardSummary());
+    return NextResponse.json(await getDashboardSummary());
   } catch (err) {
     return handleApiError(err);
   }

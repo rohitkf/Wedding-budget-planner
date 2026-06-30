@@ -5,7 +5,7 @@ import { parseBody, handleApiError } from "@/lib/api-helpers";
 
 export async function GET() {
   try {
-    return NextResponse.json(listCreditCards());
+    return NextResponse.json(await listCreditCards());
   } catch (err) {
     return handleApiError(err);
   }
@@ -14,7 +14,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const input = await parseBody(req, creditCardInputSchema);
-    const card = createCreditCard(input);
+    const card = await createCreditCard(input);
     return NextResponse.json(card, { status: 201 });
   } catch (err) {
     return handleApiError(err);

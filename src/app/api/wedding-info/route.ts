@@ -5,7 +5,7 @@ import { parseBody, handleApiError } from "@/lib/api-helpers";
 
 export async function GET() {
   try {
-    return NextResponse.json(getWeddingInfo());
+    return NextResponse.json(await getWeddingInfo());
   } catch (err) {
     return handleApiError(err);
   }
@@ -14,7 +14,7 @@ export async function GET() {
 export async function PATCH(req: Request) {
   try {
     const input = await parseBody(req, weddingInfoUpdateSchema);
-    const info = updateWeddingInfo(input);
+    const info = await updateWeddingInfo(input);
     return NextResponse.json(info);
   } catch (err) {
     return handleApiError(err);

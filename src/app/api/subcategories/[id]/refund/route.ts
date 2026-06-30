@@ -7,7 +7,7 @@ import { parseBody, handleApiError, jsonError, ApiValidationError } from "@/lib/
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const subcategory = getSubcategory(id);
+    const subcategory = await getSubcategory(id);
     if (!subcategory) return jsonError("Subcategory not found", 404);
     if (!subcategory.depositRefundable) {
       throw new ApiValidationError("This expense does not have a refundable deposit");
@@ -20,12 +20,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       subcategory.refundStatus !== "REFUNDED" &&
       input.creditToSavingsAccountId
     ) {
-      const account = getSavingsAccount(input.creditToSavingsAccountId);
+      const account = await getSavingsAccount(input.creditToSavingsAccountId);
       if (!account) throw new ApiValidationError("Savings account not found");
-      adjustSavingsBalance(input.creditToSavingsAccountId, subcategory.depositAmount ?? 0);
+      await adjustSavingsBalance(input.creditToSavingsAccountId, subcategory.depositAmount ?? 0);
     }
 
-    const updated = setRefundStatus(id, input.status);
+    const updated = await setRefundStatus(id, input.status);
     return NextResponse.json(updated);
   } catch (err) {
     return handleApiError(err);
