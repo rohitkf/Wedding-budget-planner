@@ -85,7 +85,10 @@ export function PaymentModal({
       return;
     }
     if (!sumMatches) {
-      setError(`Split amounts (${formatCurrency(splitSum, currency)}) must add up exactly to the payment amount (${formatCurrency(amountNum, currency)}).`);
+      const diff = amountNum - splitSum;
+      const diffFormatted = formatCurrency(Math.abs(diff), currency);
+      const hint = diff > 0 ? `${diffFormatted} short` : `${diffFormatted} over`;
+      setError(`Split amounts (${formatCurrency(splitSum, currency)}) must add up exactly to the payment amount (${formatCurrency(amountNum, currency)}) — ${hint}.`);
       return;
     }
     if (splits.some((s) => !s.accountId || !(Number(s.amount) > 0))) {
