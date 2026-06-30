@@ -146,10 +146,9 @@ export function SubcategoryRow({
         open={deleteOpen}
         title="Delete Subcategory"
         description={`Are you sure you want to delete "${subcategory.name}"? This will also delete its payment history.`}
-        loading={deleteSub.isPending}
-        onConfirm={async () => {
-          await deleteSub.mutateAsync(subcategory.id);
+        onConfirm={() => {
           setDeleteOpen(false);
+          deleteSub.mutate(subcategory.id);
         }}
         onCancel={() => setDeleteOpen(false)}
       />

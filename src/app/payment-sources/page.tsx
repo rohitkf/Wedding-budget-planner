@@ -37,10 +37,9 @@ function SavingsRow({ account, currency }: { account: SavingsAccount; currency: 
         open={deleteOpen}
         title="Delete Savings Account"
         description={`Are you sure you want to delete "${account.name}"? Payments already recorded against it will keep their history.`}
-        loading={del.isPending}
-        onConfirm={async () => {
-          await del.mutateAsync(account.id);
+        onConfirm={() => {
           setDeleteOpen(false);
+          del.mutate(account.id);
         }}
         onCancel={() => setDeleteOpen(false)}
       />
@@ -76,10 +75,9 @@ function CreditCardRow({ card, currency }: { card: CreditCard; currency: string 
         open={deleteOpen}
         title="Delete Credit Card"
         description={`Are you sure you want to delete "${card.name}"? Payments already recorded against it will keep their history.`}
-        loading={del.isPending}
-        onConfirm={async () => {
-          await del.mutateAsync(card.id);
+        onConfirm={() => {
           setDeleteOpen(false);
+          del.mutate(card.id);
         }}
         onCancel={() => setDeleteOpen(false)}
       />
